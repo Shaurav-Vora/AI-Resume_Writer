@@ -3,6 +3,7 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 import json
+import io
 from dotenv import load_dotenv
 from docxtpl import DocxTemplate
 
@@ -43,6 +44,11 @@ Tasks - Engineered a full-stack AI solution using Python and RAG architecture to
 4. Sustain Dubai: Developed a gamified sustainability prototype mobile app for Dubai residents using Java and Android Studio. Designed challenges allowing users to earn points, increasing projected eco-friendly habit retention by 25%.
 5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, reducing manual browsing from 2+ hours to less than 5 minutes.
 6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access.
+
+[Achievements]
+- Awarded UK Design Patent (No. 6482196) for an "Autonomous Robot for Sustainable Desert Restoration" validating innovation in robotics and sustainable engineering.
+- Awarded merit scholarship by Manipal University for the degree of BTech in Computer Science and Engineering.
+- Received dean’s list award for all semesters at USIU-Africa.
 """
 
 SYSTEM_PROMPT = """
@@ -51,7 +57,7 @@ I will provide my "Master Resume" (which includes a pool of projects) and a "Job
 
 Task 1: Read the Job Description and select the THREE projects from my 'Projects Pool' that most closely match the required skills.
 Task 2: Rewrite the description for the THREE chosen projects to perfectly align with the JD keywords.
-Task 3: Write a powerful 45-50 word professional summary tailored to the Job Description.
+Task 3: Write a powerful 45-50 word professional summary that highlights my professional experience, key skills, and major achievements tailored to a specific job. It acts as a "teaser" to grab recruiters' attention, showcasing my value proposition through quantified accomplishments rather than just duties..
 Task 4: Write a comma-separated list of the top 7 technical keywords from the Job Description that are relevant to my skills and experience.
 Task 5: Write a comma-separated list of the top 7 soft skills from the Job Description that are relevant to my skills.
 Task 6: Select up to 4 relevant certifications from my Master Resume. Do not invent any.
@@ -63,8 +69,8 @@ CRITICAL RULES FOR BEATING ATS (STRICT COMPLIANCE REQUIRED):
 - Structure every project and experience description using the format: [Unique Action Verb] + [What I did] + [Technology Used] + [Quantifiable Result/Impact].
 - Length: Keep project descriptions between 40 and 50 words.
 - Do NOT invent metrics or skills that are not in the Master Resume.
-- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for a smart home device interface".
-- FOR THE SUMMARY: Incorporate the target job title and top technical keywords from the Job Description. Keep it strictly between 45 and 50 words.
+- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for a Autonomous Robot for Sustainable Desert Restoration".
+- FOR THE SUMMARY: Incorporate the  and top technical keywords from the skills that align well with the job description. Keep it strictly between 45 and 50 words and do not lie or create your own.
 
 Output a strictly valid JSON object with these exact keys:
 {
@@ -84,6 +90,7 @@ Output a strictly valid JSON object with these exact keys:
 }
 """
 
+# ROUTE 1: Talk to Gemini and get JSON data
 @app.route('/api/generate', methods=['POST'])
 def generate_resume():
     data = request.json
@@ -93,27 +100,44 @@ def generate_resume():
     combined_prompt = f"{SYSTEM_PROMPT}\n\nMaster Resume:\n{MASTER_RESUME}\n\nJob Title: {job_title}\nJob Description:\n{job_description}"
 
     try:
-
         response = model.generate_content(combined_prompt)
-        ai_content = json.loads(response.text) # Parse the JSON
+        clean_text = response.text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:-3].strip()
+            
+        ai_content = json.loads(clean_text)
+        return jsonify({"success": True, "data": ai_content})
 
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ROUTE 2: Take user-edited JSON and export to Word Document
+@app.route('/api/export', methods=['POST'])
+def export_resume():
+    try:
+        edited_data = request.json
+        job_title = edited_data.get('jobTitle_meta', 'Tailored') # Custom meta tag we will send from React
         
         doc = DocxTemplate("FAANG_template - Copy.docx")
-        doc.render(ai_content)
-        # Change the extension from .pdf to .docx
-        output_file = f"Shaurav_Vora_Resume_{job_title.replace(' ', '_')}.docx"
-        doc.save(output_file)
+        doc.render(edited_data)
+        
+        # Save to a memory buffer instead of disk
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+        
+        output_filename = f"Shaurav_Vora_Resume_{job_title.replace(' ', '_')}.docx"
 
-        # Update the send_file parameters
         return send_file(
-            output_file, 
+            file_stream, 
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
             as_attachment=True, 
-            download_name=output_file
+            download_name=output_filename
         )
 
     except Exception as e:
-        print(f"Error occurred: {e}") # Prints to your terminal for easy debugging
+        print(f"Export Error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
