@@ -6,6 +6,7 @@ import json
 from dotenv import load_dotenv
 from docxtpl import DocxTemplate
 
+# searches for a .env file and loads the environment variables from it
 load_dotenv()
 
 app = Flask(__name__)
