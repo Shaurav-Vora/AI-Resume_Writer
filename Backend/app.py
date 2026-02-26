@@ -20,7 +20,7 @@ model = genai.GenerativeModel(
 )
 
 MASTER_RESUME = """
-[Technical Skills]
+[Technical Skills]git
 Programming Languages: Python, Java, JavaScript, SQL, C, C++, Pine Script
 Frameworks & Libraries: Spring Boot, TensorFlow, OpenCV, Flask, Android Studio, React, BeautifulSoup, Selenium
 Tools & Technologies: Apache Kafka, REST APIs, JWT, Firebase, Google Gemini API, Git
