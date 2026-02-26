@@ -31,6 +31,12 @@ Problem Solving, Communication, Teamwork, Adaptability, Time Management, Leaders
 [Certifications]
 Generative AI with AWS, Microsoft Excel, Fundamentals of Java
 
+[Achievements]
+- Awarded UK Design Patent (No. 6482196) for an "Autonomous Robot for Sustainable Desert Restoration" validating innovation in robotics and sustainable engineering.
+- Awarded merit scholarship by Manipal University for the degree of BTech in Computer Science and Engineering.
+- Received dean’s list award for all semesters at USIU-Africa.
+
+
 [Experience]
 Company - Veracitiz Solutions Pvt. Ltd
 Role - Software Engineering Intern (July 2025 - August 2025)
@@ -59,6 +65,7 @@ Task 4: Write a comma-separated list of the top 7 technical keywords from the Jo
 Task 5: Write a comma-separated list of the top 7 soft skills from the Job Description that are relevant to my skills.
 Task 6: Select up to 4 relevant certifications from my Master Resume. Do not invent any.
 Task 7: Rewrite my work experience to align with the JD keywords.
+Task 8: Highlight 2-3 key achievements from my Master Resume that are most relevant to the Job Description. Ensure the UK Design Patent is included if relevant.
 
 CRITICAL RULES FOR BEATING ATS (STRICT COMPLIANCE REQUIRED):
 - NO REPETITION: You MUST use a unique, strong action verb to start every single bullet point across the entire resume. Do not repeat verbs like "Developed", "Engineered", or "Created". Use a diverse vocabulary (e.g., Architected, Spearheaded, Orchestrated, Synthesized, Optimized, Formulated).
@@ -66,7 +73,7 @@ CRITICAL RULES FOR BEATING ATS (STRICT COMPLIANCE REQUIRED):
 - Structure every project and experience description using the format: [Unique Action Verb] + [What I did] + [Technology Used] + [Quantifiable Result/Impact].
 - Length: Keep project descriptions between 40 and 50 words.
 - Do NOT invent metrics or skills that are not in the Master Resume.
-- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for a smart home device interface".
+- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for an autonomous robot for sustainable desert restoration".
 - FOR THE SUMMARY: Incorporate the target job title and top technical keywords from the Job Description. Keep it strictly between 45 and 50 words.
 
 Output a strictly valid JSON object with these exact keys:
@@ -85,6 +92,7 @@ Output a strictly valid JSON object with these exact keys:
     "work_title_1": "[Insert the title of the work experience]",
     "work_company_1": "[Insert the company name]",
     "work_exp_1": "[Insert the rewritten description enforcing unique action verbs and quantified impact]"
+    "achievements": "[Insert 2-3 bullet points of key achievements, ensuring the UK Design patent is included here if relevant]"
 }
 """
 

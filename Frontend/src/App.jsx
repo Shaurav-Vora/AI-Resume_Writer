@@ -563,34 +563,6 @@ function App() {
                 <strong>Certifications:</strong> {resumeData.certs}
               </p>
 
-              {resumeData.achievements && (
-                <>
-                  <h3
-                    style={{
-                      textTransform: "uppercase",
-                      fontSize: "13px",
-                      letterSpacing: "1px",
-                      borderBottom: "1px solid #cbd5e1",
-                      paddingBottom: "4px",
-                      marginBottom: "12px",
-                      color: "#0f172a",
-                      marginTop: "24px",
-                    }}
-                  >
-                    Achievements
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "14.5px",
-                      marginBottom: "24px",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
-                    {resumeData.achievements}
-                  </p>
-                </>
-              )}
-
               <h3
                 style={{
                   textTransform: "uppercase",
@@ -687,6 +659,33 @@ function App() {
                   <li>{resumeData.project_description_3}</li>
                 </ul>
               </div>
+              {resumeData.achievements && (
+                <>
+                  <h3
+                    style={{
+                      textTransform: "uppercase",
+                      fontSize: "13px",
+                      letterSpacing: "1px",
+                      borderBottom: "1px solid #cbd5e1",
+                      paddingBottom: "4px",
+                      marginBottom: "12px",
+                      color: "#0f172a",
+                      marginTop: "24px",
+                    }}
+                  >
+                    Achievements
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "14.5px",
+                      marginBottom: "24px",
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    {resumeData.achievements}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         ) : (
