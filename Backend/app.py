@@ -3,13 +3,14 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 import json
+import io
 from dotenv import load_dotenv
 from docxtpl import DocxTemplate
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app) # Allows React to talk to this API
+CORS(app)
 
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
@@ -19,10 +20,10 @@ model = genai.GenerativeModel(
 )
 
 MASTER_RESUME = """
-[Technical Skills]
-Programming Languages: Python, Java, JavaScript, SQL, C, C++
+[Technical Skills]git
+Programming Languages: Python, Java, JavaScript, SQL, C, C++, Pine Script
 Frameworks & Libraries: Spring Boot, TensorFlow, OpenCV, Flask, Android Studio, React, BeautifulSoup, Selenium
-Tools & Technologies: Apache Kafka, REST APIs, JWT, BeautifulSoup, Selenium, Firebase, Google Gemini API, Git
+Tools & Technologies: Apache Kafka, REST APIs, JWT, Firebase, Google Gemini API, Git
 
 [Soft Skills]
 Problem Solving, Communication, Teamwork, Adaptability, Time Management, Leadership, Creativity, Critical Thinking, Attention to Detail, Collaboration, Empathy, Resilience, Conflict Resolution, Decision Making, Interpersonal Skills, Work Ethic, Emotional Intelligence, Project Management, Self-Motivation, Active Listening.
@@ -32,16 +33,19 @@ Generative AI with AWS, Microsoft Excel, Fundamentals of Java
 
 [Experience]
 Company - Veracitiz Solutions Pvt. Ltd
-Role - AI Intern
-Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
+Role - Software Engineering Intern (July 2025 - August 2025)
+Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process 100+ uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
 
 [Projects Pool]
-1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99.9% data integrity via Spring Data JPA. 
+1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process 10,000+ high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99.9% data integrity via Spring Data JPA. 
 2. Recipe AI: Built a Java-based Android app integrating Google Gemini API to generate personalized recipes. Reduced user meal-planning time by 30% by implementing a user-friendly interface for inputting preferences, dietary restrictions, and available ingredients.
 3. Banana leaf disease classifier: Trained a Python Machine Learning model achieving 90% classification accuracy using a dataset of 5,000+ images. Leveraged OpenCV for image processing and TensorFlow for model training using Flask, enabling real-time disease detection for local farmers.
 4. Sustain Dubai: Developed a gamified sustainability prototype mobile app for Dubai residents using Java and Android Studio. Designed challenges allowing users to earn points, increasing projected eco-friendly habit retention by 25%.
-5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, reducing manual browsing from 2+ hours to less than 5 minutes.
-6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access.
+5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, saving 5+ hours of manual browsing per semester.
+6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access for 50+ concurrent mock users.
+7. Expense Tracking App: Developed a mobile application using Java and Firebase to transition daily expense tracking from Excel spreadsheets into a dynamic UI, featuring real-time database syncing and personalized budgeting dashboards.
+8. Custom Trading Indicators: Authored advanced multi-confluence trading indicators in Pine Script v6 for the crypto (BTC/USD) and gold (XAU/USD) markets, utilizing Fixed Range Volume Profiles to optimize scalping strategies.
+9. OS Concept Implementations: Wrote optimized C code to simulate core Operating System concepts, including CPU scheduling algorithms (FCFS, SJF, Round Robin), inter-process communication via shared memory, and thread management using pthreads.
 """
 
 SYSTEM_PROMPT = """
@@ -70,6 +74,7 @@ Output a strictly valid JSON object with these exact keys:
     "tech_skills": "[Insert comma separated list of top 7 technical keywords here]",
     "soft_skills": "[Insert comma separated list of top 7 soft skills here]",
     "certs": "[Insert comma separated list of top 4 certifications here]",
+    "achievements": "[Insert 2-3 bullet points of key achievements, ensuring the UK Design patent is included here if relevant]",
     "resume_summary": "[Insert tailored 45-50 word summary here]",
     "project_title_1": "[Insert Name of Best Matching Project]",
     "project_description_1": "[Insert a 2-3 sentence description of the project]",
@@ -92,27 +97,42 @@ def generate_resume():
     combined_prompt = f"{SYSTEM_PROMPT}\n\nMaster Resume:\n{MASTER_RESUME}\n\nJob Title: {job_title}\nJob Description:\n{job_description}"
 
     try:
-
         response = model.generate_content(combined_prompt)
-        ai_content = json.loads(response.text) # Parse the JSON
+        clean_text = response.text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:-3].strip()
+            
+        ai_content = json.loads(clean_text)
+        return jsonify({"success": True, "data": ai_content})
 
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/export', methods=['POST'])
+def export_resume():
+    try:
+        edited_data = request.json
+        job_title = edited_data.get('jobTitle_meta', 'Tailored') 
         
         doc = DocxTemplate("FAANG_template - Copy.docx")
-        doc.render(ai_content)
-        # Change the extension from .pdf to .docx
-        output_file = f"Shaurav_Vora_Resume_{job_title.replace(' ', '_')}.docx"
-        doc.save(output_file)
+        doc.render(edited_data)
+        
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+        
+        output_filename = f"Shaurav_Vora_Resume_{job_title.replace(' ', '_')}.docx"
 
-        # Update the send_file parameters
         return send_file(
-            output_file, 
+            file_stream, 
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
             as_attachment=True, 
-            download_name=output_file
+            download_name=output_filename
         )
 
     except Exception as e:
-        print(f"Error occurred: {e}") # Prints to your terminal for easy debugging
+        print(f"Export Error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
