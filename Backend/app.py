@@ -7,11 +7,10 @@ import io
 from dotenv import load_dotenv
 from docxtpl import DocxTemplate
 
-# searches for a .env file and loads the environment variables from it
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app) # Allows React to talk to this API
+CORS(app)
 
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
@@ -22,9 +21,9 @@ model = genai.GenerativeModel(
 
 MASTER_RESUME = """
 [Technical Skills]
-Programming Languages: Python, Java, JavaScript, SQL, C, C++
+Programming Languages: Python, Java, JavaScript, SQL, C, C++, Pine Script
 Frameworks & Libraries: Spring Boot, TensorFlow, OpenCV, Flask, Android Studio, React, BeautifulSoup, Selenium
-Tools & Technologies: Apache Kafka, REST APIs, JWT, BeautifulSoup, Selenium, Firebase, Google Gemini API, Git
+Tools & Technologies: Apache Kafka, REST APIs, JWT, Firebase, Google Gemini API, Git
 
 [Soft Skills]
 Problem Solving, Communication, Teamwork, Adaptability, Time Management, Leadership, Creativity, Critical Thinking, Attention to Detail, Collaboration, Empathy, Resilience, Conflict Resolution, Decision Making, Interpersonal Skills, Work Ethic, Emotional Intelligence, Project Management, Self-Motivation, Active Listening.
@@ -34,21 +33,19 @@ Generative AI with AWS, Microsoft Excel, Fundamentals of Java
 
 [Experience]
 Company - Veracitiz Solutions Pvt. Ltd
-Role - AI Intern
-Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
+Role - Software Engineering Intern (July 2025 - August 2025)
+Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process 100+ uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
 
 [Projects Pool]
-1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99.9% data integrity via Spring Data JPA. 
+1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process 10,000+ high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99.9% data integrity via Spring Data JPA. 
 2. Recipe AI: Built a Java-based Android app integrating Google Gemini API to generate personalized recipes. Reduced user meal-planning time by 30% by implementing a user-friendly interface for inputting preferences, dietary restrictions, and available ingredients.
 3. Banana leaf disease classifier: Trained a Python Machine Learning model achieving 90% classification accuracy using a dataset of 5,000+ images. Leveraged OpenCV for image processing and TensorFlow for model training using Flask, enabling real-time disease detection for local farmers.
 4. Sustain Dubai: Developed a gamified sustainability prototype mobile app for Dubai residents using Java and Android Studio. Designed challenges allowing users to earn points, increasing projected eco-friendly habit retention by 25%.
-5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, reducing manual browsing from 2+ hours to less than 5 minutes.
-6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access.
-
-[Achievements]
-- Awarded UK Design Patent (No. 6482196) for an "Autonomous Robot for Sustainable Desert Restoration" validating innovation in robotics and sustainable engineering.
-- Awarded merit scholarship by Manipal University for the degree of BTech in Computer Science and Engineering.
-- Received dean’s list award for all semesters at USIU-Africa.
+5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, saving 5+ hours of manual browsing per semester.
+6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access for 50+ concurrent mock users.
+7. Expense Tracking App: Developed a mobile application using Java and Firebase to transition daily expense tracking from Excel spreadsheets into a dynamic UI, featuring real-time database syncing and personalized budgeting dashboards.
+8. Custom Trading Indicators: Authored advanced multi-confluence trading indicators in Pine Script v6 for the crypto (BTC/USD) and gold (XAU/USD) markets, utilizing Fixed Range Volume Profiles to optimize scalping strategies.
+9. OS Concept Implementations: Wrote optimized C code to simulate core Operating System concepts, including CPU scheduling algorithms (FCFS, SJF, Round Robin), inter-process communication via shared memory, and thread management using pthreads.
 """
 
 SYSTEM_PROMPT = """
@@ -57,7 +54,7 @@ I will provide my "Master Resume" (which includes a pool of projects) and a "Job
 
 Task 1: Read the Job Description and select the THREE projects from my 'Projects Pool' that most closely match the required skills.
 Task 2: Rewrite the description for the THREE chosen projects to perfectly align with the JD keywords.
-Task 3: Write a powerful 45-50 word professional summary that highlights my professional experience, key skills, and major achievements tailored to a specific job. It acts as a "teaser" to grab recruiters' attention, showcasing my value proposition through quantified accomplishments rather than just duties..
+Task 3: Write a powerful 45-50 word professional summary tailored to the Job Description.
 Task 4: Write a comma-separated list of the top 7 technical keywords from the Job Description that are relevant to my skills and experience.
 Task 5: Write a comma-separated list of the top 7 soft skills from the Job Description that are relevant to my skills.
 Task 6: Select up to 4 relevant certifications from my Master Resume. Do not invent any.
@@ -69,14 +66,15 @@ CRITICAL RULES FOR BEATING ATS (STRICT COMPLIANCE REQUIRED):
 - Structure every project and experience description using the format: [Unique Action Verb] + [What I did] + [Technology Used] + [Quantifiable Result/Impact].
 - Length: Keep project descriptions between 40 and 50 words.
 - Do NOT invent metrics or skills that are not in the Master Resume.
-- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for a Autonomous Robot for Sustainable Desert Restoration".
-- FOR THE SUMMARY: Incorporate the  and top technical keywords from the skills that align well with the job description. Keep it strictly between 45 and 50 words and do not lie or create your own.
+- FOR THE SUMMARY: You MUST include the fact that I hold a "UK design patent for a smart home device interface".
+- FOR THE SUMMARY: Incorporate the target job title and top technical keywords from the Job Description. Keep it strictly between 45 and 50 words.
 
 Output a strictly valid JSON object with these exact keys:
 {
     "tech_skills": "[Insert comma separated list of top 7 technical keywords here]",
     "soft_skills": "[Insert comma separated list of top 7 soft skills here]",
     "certs": "[Insert comma separated list of top 4 certifications here]",
+    "achievements": "[Insert 2-3 bullet points of key achievements, ensuring the UK Design patent is included here if relevant]",
     "resume_summary": "[Insert tailored 45-50 word summary here]",
     "project_title_1": "[Insert Name of Best Matching Project]",
     "project_description_1": "[Insert a 2-3 sentence description of the project]",
@@ -90,7 +88,6 @@ Output a strictly valid JSON object with these exact keys:
 }
 """
 
-# ROUTE 1: Talk to Gemini and get JSON data
 @app.route('/api/generate', methods=['POST'])
 def generate_resume():
     data = request.json
@@ -112,17 +109,15 @@ def generate_resume():
         print(f"Error occurred: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ROUTE 2: Take user-edited JSON and export to Word Document
 @app.route('/api/export', methods=['POST'])
 def export_resume():
     try:
         edited_data = request.json
-        job_title = edited_data.get('jobTitle_meta', 'Tailored') # Custom meta tag we will send from React
+        job_title = edited_data.get('jobTitle_meta', 'Tailored') 
         
         doc = DocxTemplate("FAANG_template - Copy.docx")
         doc.render(edited_data)
         
-        # Save to a memory buffer instead of disk
         file_stream = io.BytesIO()
         doc.save(file_stream)
         file_stream.seek(0)
