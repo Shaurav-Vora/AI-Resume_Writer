@@ -43,15 +43,12 @@ Role - Software Engineering Intern (July 2025 - August 2025)
 Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process 100+ uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
 
 [Projects Pool]
-1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process 10,000+ high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99.9% data integrity via Spring Data JPA. 
+1. JPMorgan Chase & Co. Software Engineering Simulation: Engineered a real-time banking backend using Spring Boot to process high-volume financial transactions daily with Apache Kafka to decouple transaction ingestion from database persistence, ensuring 99% data integrity via Spring Data JPA. 
 2. Recipe AI: Built a Java-based Android app integrating Google Gemini API to generate personalized recipes. Reduced user meal-planning time by 30% by implementing a user-friendly interface for inputting preferences, dietary restrictions, and available ingredients.
 3. Banana leaf disease classifier: Trained a Python Machine Learning model achieving 90% classification accuracy using a dataset of 5,000+ images. Leveraged OpenCV for image processing and TensorFlow for model training using Flask, enabling real-time disease detection for local farmers.
 4. Sustain Dubai: Developed a gamified sustainability prototype mobile app for Dubai residents using Java and Android Studio. Designed challenges allowing users to earn points, increasing projected eco-friendly habit retention by 25%.
 5. Course search automation: Created a Python script automating university course searches, utilizing web scraping (BeautifulSoup, Selenium) to extract and structure data, saving 5+ hours of manual browsing per semester.
 6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access for 50+ concurrent mock users.
-7. Expense Tracking App: Developed a mobile application using Java and Firebase to transition daily expense tracking from Excel spreadsheets into a dynamic UI, featuring real-time database syncing and personalized budgeting dashboards.
-8. Custom Trading Indicators: Authored advanced multi-confluence trading indicators in Pine Script v6 for the crypto (BTC/USD) and gold (XAU/USD) markets, utilizing Fixed Range Volume Profiles to optimize scalping strategies.
-9. OS Concept Implementations: Wrote optimized C code to simulate core Operating System concepts, including CPU scheduling algorithms (FCFS, SJF, Round Robin), inter-process communication via shared memory, and thread management using pthreads.
 """
 
 SYSTEM_PROMPT = """
