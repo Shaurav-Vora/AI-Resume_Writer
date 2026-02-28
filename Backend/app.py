@@ -108,6 +108,13 @@ def generate_resume():
             clean_text = clean_text[7:-3].strip()
             
         ai_content = json.loads(clean_text)
+
+        if isinstance(ai_content.get('achievements'), list):
+            ai_content['achievements'] = '\n• '.join(ai_content['achievements'])
+            
+            if not ai_content['achievements'].startswith('•'):
+                ai_content['achievements'] = '• ' + ai_content['achievements']
+
         return jsonify({"success": True, "data": ai_content})
 
     except Exception as e:

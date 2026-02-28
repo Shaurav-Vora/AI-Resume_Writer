@@ -1,4 +1,30 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+
+// NEW: A reusable component that automatically adjusts its height based on content
+const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Temporarily shrink to 'auto' so it can reduce in size if text is deleted
+      textareaRef.current.style.height = "auto";
+      // Expand to match the exact height of the inner text
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value || ""}
+      onChange={onChange}
+      placeholder={placeholder}
+      // 'resize-none' hides the mouse drag handle, 'overflow-hidden' hides the scrollbar
+      className={`${className} resize-none overflow-hidden`}
+      rows={1}
+    />
+  );
+};
 
 function App() {
   const [jobTitle, setJobTitle] = useState("");
@@ -62,176 +88,79 @@ function App() {
     setResumeData({ ...resumeData, [field]: value });
   };
 
+  const classes = {
+    input:
+      "w-full px-4 py-3.5 text-[15px] rounded-lg border border-slate-300 bg-slate-50 transition-all duration-200 text-slate-800 leading-relaxed focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400",
+    label:
+      "block text-[13px] font-bold text-slate-600 uppercase tracking-wide mb-2",
+    card: "bg-white rounded-2xl p-8 mb-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-slate-200",
+    cardTitle:
+      "text-lg font-bold text-slate-900 mt-0 mb-5 flex items-center gap-2 pb-3 border-b border-slate-100",
+    previewHeader:
+      "uppercase text-[13px] tracking-wide border-b border-slate-300 pb-1 mb-3 text-slate-900 mt-6 first:mt-0",
+  };
+
   return (
-    <div
-      style={{
-        maxWidth: "1600px",
-        margin: "0 auto",
-        padding: "30px",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        display: "flex",
-        gap: "40px",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        backgroundColor: "#f4f7f9",
-        minHeight: "100vh",
-      }}
-    >
-      <style>
-        {`
-          @keyframes spin { 100% { transform: rotate(360deg); } }
-          
-          body { 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f7f9; 
-          }
-          * { 
-            box-sizing: border-box; 
-          }
-          
-          .scroll-panel::-webkit-scrollbar { width: 8px; }
-          .scroll-panel::-webkit-scrollbar-track { background: transparent; }
-          .scroll-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-          .scroll-panel::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-          
-          .input-field {
-            width: 100%; padding: 14px 16px; font-size: 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; box-sizing: border-box; background-color: #f8fafc; transition: all 0.2s ease; color: #1e293b; line-height: 1.6;
-          }
-          .input-field::placeholder { color: #94a3b8; }
-          .input-field:focus {
-            outline: none; border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-          }
-          
-          .edit-label { font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
-          
-          .editor-card {
-            background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;
-          }
-          .card-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 20px; display: flex; alignItems: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
-          .form-group { margin-bottom: 20px; }
-          
-          .generate-btn {
-            width: 100%; padding: 16px; font-size: 16px; font-weight: 600; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 10px;
-          }
-          .generate-btn:not(:disabled) {
-            background: linear-gradient(135deg, #2563eb, #4f46e5); box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
-          }
-          .generate-btn:not(:disabled):hover {
-            transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-          }
-          .generate-btn:disabled {
-            background: #cbd5e1; cursor: not-allowed;
-          }
-
-          .feature-pill {
-            padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
-          }
-        `}
-      </style>
-
+    <div className="max-w-400 mx-auto p-8 font-sans flex gap-10 items-start justify-center min-h-screen">
       {/* LEFT COLUMN: Input Form or Editor */}
-      <div
-        className="scroll-panel"
-        style={{
-          flex: "1",
-          minWidth: "500px",
-          position: "sticky",
-          top: "30px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          paddingRight: "10px",
-        }}
-      >
+      <div className="custom-scrollbar flex-1 min-w-125 sticky top-8 max-h-[90vh] overflow-y-auto pr-3">
         {!resumeData ? (
-          <div
-            className="editor-card"
-            style={{ borderTop: "4px solid #3b82f6" }}
-          >
-            <h1
-              style={{
-                marginTop: 0,
-                fontSize: "32px",
-                letterSpacing: "-0.5px",
-                marginBottom: "8px",
-              }}
-            >
-              <span
-                style={{
-                  background: "linear-gradient(to right, #2563eb, #9333ea)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  fontWeight: "800",
-                }}
-              >
+          <div className={`${classes.card} border-t-4 border-t-blue-500`}>
+            <h1 className="mt-0 text-[32px] tracking-tight mb-2">
+              <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-extrabold">
                 AI Resume Tailor
               </span>
             </h1>
-            <p
-              style={{
-                color: "#64748b",
-                marginBottom: "32px",
-                fontSize: "16px",
-                lineHeight: "1.6",
-              }}
-            >
+            <p className="text-slate-500 mb-8 text-base leading-relaxed">
               Paste the target job details below. The AI will analyze the ATS
               keywords and perfectly align your master resume to match.
             </p>
 
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "24px" }}
-            >
+            <div className="flex flex-col gap-6">
               <div>
-                <label className="edit-label">Target Job Title</label>
+                <label className={classes.label}>Target Job Title</label>
                 <input
                   type="text"
                   placeholder="e.g., Data Engineering Intern"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  className="input-field"
-                  style={{ backgroundColor: "#fff" }}
+                  className={`${classes.input} bg-white`}
                 />
               </div>
               <div>
-                <label className="edit-label">Full Job Description</label>
+                <label className={classes.label}>Full Job Description</label>
                 <textarea
                   placeholder="Paste the requirements, responsibilities, and qualifications here..."
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   rows={12}
-                  className="input-field"
-                  style={{ resize: "vertical", backgroundColor: "#fff" }}
+                  className={`${classes.input} resize-y bg-white`}
                 />
               </div>
 
               <button
                 onClick={handleGenerate}
                 disabled={isLoading || !jobDescription}
-                className="generate-btn"
+                className="w-full p-4 text-base font-semibold text-white rounded-lg transition-all duration-200 flex justify-center items-center gap-2.5 bg-linear-to-br from-blue-600 to-indigo-600 shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:-translate-y-[1px] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isLoading ? (
                   <>
                     <svg
-                      style={{
-                        animation: "spin 1s linear infinite",
-                        width: "20px",
-                        height: "20px",
-                        color: "white",
-                      }}
-                      xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
                       <circle
+                        className="opacity-25"
                         cx="12"
                         cy="12"
                         r="10"
                         stroke="currentColor"
                         strokeWidth="4"
-                        strokeOpacity="0.25"
                       ></circle>
                       <path
+                        className="opacity-75"
                         fill="currentColor"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
@@ -246,94 +175,72 @@ function App() {
           </div>
         ) : (
           <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-                padding: "0 4px",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <h2 style={{ margin: 0, color: "#0f172a", fontSize: "24px" }}>
+            <div className="flex justify-between items-center mb-5 px-1">
+              <div className="flex flex-col">
+                <h2 className="m-0 text-slate-900 text-2xl font-bold">
                   ✏️ Editor Mode
                 </h2>
-                <span style={{ color: "#64748b", fontSize: "14px" }}>
+                <span className="text-slate-500 text-sm">
                   Changes auto-sync to your preview
                 </span>
               </div>
               <button
                 onClick={() => setResumeData(null)}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  backgroundColor: "#fef2f2",
-                  color: "#dc2626",
-                  border: "1px solid #fecaca",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
+                className="px-4 py-2 text-[13px] font-semibold bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
               >
                 Start Over
               </button>
             </div>
 
             {/* CARD 1: Profile Summary */}
-            <div className="editor-card">
-              <h3 className="card-title">👤 Profile Summary</h3>
-              <div className="form-group">
-                <textarea
-                  className="input-field"
-                  rows={4}
+            <div className={classes.card}>
+              <h3 className={classes.cardTitle}>👤 Profile Summary</h3>
+              <div className="mb-4">
+                <AutoResizeTextarea
+                  className={classes.input}
                   value={resumeData.resume_summary}
                   onChange={(e) => handleEdit("resume_summary", e.target.value)}
                 />
               </div>
             </div>
 
-            {/* CARD 2: Skills & Certifications */}
-            <div className="editor-card">
-              <h3 className="card-title">🛠️ Skills, Certs & Achievements</h3>
-              <div
-                style={{ display: "flex", gap: "16px", marginBottom: "20px" }}
-              >
-                <div style={{ flex: 1 }}>
-                  <label className="edit-label">Tech Skills</label>
-                  <textarea
-                    className="input-field"
-                    rows={3}
+            {/* CARD 2: Skills, Certs & Achievements */}
+            <div className={classes.card}>
+              <h3 className={classes.cardTitle}>
+                🛠️ Skills, Certs & Achievements
+              </h3>
+              <div className="flex gap-4 mb-5">
+                <div className="flex-1">
+                  <label className={classes.label}>Tech Skills</label>
+                  <AutoResizeTextarea
+                    className={classes.input}
                     value={resumeData.tech_skills}
                     onChange={(e) => handleEdit("tech_skills", e.target.value)}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label className="edit-label">Soft Skills</label>
-                  <textarea
-                    className="input-field"
-                    rows={3}
+                <div className="flex-1">
+                  <label className={classes.label}>Soft Skills</label>
+                  <AutoResizeTextarea
+                    className={classes.input}
                     value={resumeData.soft_skills}
                     onChange={(e) => handleEdit("soft_skills", e.target.value)}
                   />
                 </div>
               </div>
-              <div className="form-group" style={{ marginBottom: "16px" }}>
-                <label className="edit-label">Certifications</label>
-                <textarea
-                  className="input-field"
-                  rows={2}
-                  value={resumeData.certs || ""}
+              <div className="mb-4">
+                <label className={classes.label}>Certifications</label>
+                <AutoResizeTextarea
+                  className={classes.input}
+                  value={resumeData.certs}
                   onChange={(e) => handleEdit("certs", e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <label className="edit-label">Key Achievements</label>
-                <textarea
-                  className="input-field"
-                  rows={3}
-                  value={resumeData.achievements || ""}
+              {/* RESTORED: Achievements Block */}
+              <div>
+                <label className={classes.label}>Key Achievements</label>
+                <AutoResizeTextarea
+                  className={classes.input}
+                  value={resumeData.achievements}
                   onChange={(e) => handleEdit("achievements", e.target.value)}
                   placeholder="e.g., • UK Design Patent Holder..."
                 />
@@ -341,17 +248,14 @@ function App() {
             </div>
 
             {/* CARD 3: Work Experience */}
-            <div className="editor-card">
-              <h3 className="card-title">💼 Work Experience</h3>
-              <div className="form-group">
-                <label className="edit-label">Company & Role</label>
-                <div
-                  style={{ display: "flex", gap: "12px", marginBottom: "12px" }}
-                >
+            <div className={classes.card}>
+              <h3 className={classes.cardTitle}>💼 Work Experience</h3>
+              <div>
+                <label className={classes.label}>Company & Role</label>
+                <div className="flex gap-3 mb-3">
                   <input
                     type="text"
-                    className="input-field"
-                    style={{ flex: 1 }}
+                    className={`${classes.input} flex-1`}
                     value={resumeData.work_company_1}
                     onChange={(e) =>
                       handleEdit("work_company_1", e.target.value)
@@ -360,17 +264,15 @@ function App() {
                   />
                   <input
                     type="text"
-                    className="input-field"
-                    style={{ flex: 1 }}
+                    className={`${classes.input} flex-1`}
                     value={resumeData.work_title_1}
                     onChange={(e) => handleEdit("work_title_1", e.target.value)}
                     placeholder="Job Title"
                   />
                 </div>
-                <label className="edit-label">Description Bullets</label>
-                <textarea
-                  className="input-field"
-                  rows={4}
+                <label className={classes.label}>Description Bullets</label>
+                <AutoResizeTextarea
+                  className={classes.input}
                   value={resumeData.work_exp_1}
                   onChange={(e) => handleEdit("work_exp_1", e.target.value)}
                 />
@@ -378,29 +280,21 @@ function App() {
             </div>
 
             {/* CARD 4: Projects */}
-            <div className="editor-card">
-              <h3 className="card-title">🚀 Selected Projects</h3>
+            <div className={classes.card}>
+              <h3 className={classes.cardTitle}>🚀 Selected Projects</h3>
 
-              <div
-                className="form-group"
-                style={{
-                  paddingBottom: "20px",
-                  borderBottom: "1px dashed #e2e8f0",
-                }}
-              >
-                <label className="edit-label">Project 1</label>
+              <div className="pb-5 border-b border-dashed border-slate-200 mb-5">
+                <label className={classes.label}>Project 1</label>
                 <input
                   type="text"
-                  className="input-field"
-                  style={{ marginBottom: "10px", fontWeight: "600" }}
+                  className={`${classes.input} mb-2.5 font-semibold`}
                   value={resumeData.project_title_1}
                   onChange={(e) =>
                     handleEdit("project_title_1", e.target.value)
                   }
                 />
-                <textarea
-                  className="input-field"
-                  rows={3}
+                <AutoResizeTextarea
+                  className={classes.input}
                   value={resumeData.project_description_1}
                   onChange={(e) =>
                     handleEdit("project_description_1", e.target.value)
@@ -408,26 +302,18 @@ function App() {
                 />
               </div>
 
-              <div
-                className="form-group"
-                style={{
-                  paddingBottom: "20px",
-                  borderBottom: "1px dashed #e2e8f0",
-                }}
-              >
-                <label className="edit-label">Project 2</label>
+              <div className="pb-5 border-b border-dashed border-slate-200 mb-5">
+                <label className={classes.label}>Project 2</label>
                 <input
                   type="text"
-                  className="input-field"
-                  style={{ marginBottom: "10px", fontWeight: "600" }}
+                  className={`${classes.input} mb-2.5 font-semibold`}
                   value={resumeData.project_title_2}
                   onChange={(e) =>
                     handleEdit("project_title_2", e.target.value)
                   }
                 />
-                <textarea
-                  className="input-field"
-                  rows={3}
+                <AutoResizeTextarea
+                  className={classes.input}
                   value={resumeData.project_description_2}
                   onChange={(e) =>
                     handleEdit("project_description_2", e.target.value)
@@ -435,20 +321,18 @@ function App() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="edit-label">Project 3</label>
+              <div>
+                <label className={classes.label}>Project 3</label>
                 <input
                   type="text"
-                  className="input-field"
-                  style={{ marginBottom: "10px", fontWeight: "600" }}
+                  className={`${classes.input} mb-2.5 font-semibold`}
                   value={resumeData.project_title_3}
                   onChange={(e) =>
                     handleEdit("project_title_3", e.target.value)
                   }
                 />
-                <textarea
-                  className="input-field"
-                  rows={3}
+                <AutoResizeTextarea
+                  className={classes.input}
                   value={resumeData.project_description_3}
                   onChange={(e) =>
                     handleEdit("project_description_3", e.target.value)
@@ -461,259 +345,91 @@ function App() {
       </div>
 
       {/* RIGHT COLUMN: Output Dashboard & Preview */}
-      <div
-        style={{
-          flex: "1",
-          minWidth: "600px",
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
+      <div className="flex-1 min-w-150 flex flex-col h-full">
         {resumeData ? (
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "16px",
-              padding: "40px",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "30px",
-                borderBottom: "2px solid #f1f5f9",
-                paddingBottom: "20px",
-              }}
-            >
-              <h2 style={{ margin: 0, color: "#0f172a", fontSize: "24px" }}>
-                📄 Live Preview
+          <div className="bg-white rounded-2xl p-10 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200">
+            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-100 pb-5">
+              <h2 className="m-0 text-slate-900 text-2xl font-bold">
+                📄 Live Preview{" "}
+                <span className="font-normal text-slate-500 text-sm">
+                  *Layout may slightly differ in Word
+                </span>
               </h2>
               <button
                 onClick={handleExport}
                 disabled={isExporting}
-                style={{
-                  padding: "12px 24px",
-                  fontSize: "15px",
-                  backgroundColor: isExporting ? "#94a3b8" : "#16a34a",
-                  color: "white",
-                  border: "none",
-                  cursor: isExporting ? "not-allowed" : "pointer",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  transition: "all 0.2s ease",
-                  boxShadow: isExporting
-                    ? "none"
-                    : "0 4px 6px rgba(22, 163, 74, 0.2)",
-                }}
+                className="px-6 py-3 text-[15px] font-semibold rounded-lg transition-all duration-200 bg-green-600 text-white hover:bg-green-700 shadow-[0_4px_6px_rgba(22,163,74,0.2)] disabled:bg-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
               >
                 {isExporting ? "Building Document..." : "📥 Download .docx"}
               </button>
             </div>
 
             {/* Resume Content Preview */}
-            <div
-              style={{
-                fontFamily: "Georgia, serif",
-                color: "#334155",
-                lineHeight: "1.6",
-              }}
-            >
-              <h3
-                style={{
-                  textTransform: "uppercase",
-                  fontSize: "13px",
-                  letterSpacing: "1px",
-                  borderBottom: "1px solid #cbd5e1",
-                  paddingBottom: "4px",
-                  marginBottom: "12px",
-                  color: "#0f172a",
-                }}
-              >
-                Summary
-              </h3>
-              <p style={{ fontSize: "14.5px", marginBottom: "24px" }}>
-                {resumeData.resume_summary}
-              </p>
+            <div className="font-serif text-slate-700 leading-relaxed">
+              <h3 className={classes.previewHeader}>Summary</h3>
+              <p className="text-[14.5px] mb-6">{resumeData.resume_summary}</p>
 
-              <h3
-                style={{
-                  textTransform: "uppercase",
-                  fontSize: "13px",
-                  letterSpacing: "1px",
-                  borderBottom: "1px solid #cbd5e1",
-                  paddingBottom: "4px",
-                  marginBottom: "12px",
-                  color: "#0f172a",
-                }}
-              >
-                Skills & Certifications
-              </h3>
-              <p style={{ fontSize: "14.5px", margin: "0 0 6px 0" }}>
+              <h3 className={classes.previewHeader}>Skills & Certifications</h3>
+              <p className="text-[14.5px] m-0 mb-1.5">
                 <strong>Technical:</strong> {resumeData.tech_skills}
               </p>
-              <p style={{ fontSize: "14.5px", margin: "0 0 6px 0" }}>
+              <p className="text-[14.5px] m-0 mb-1.5">
                 <strong>Soft Skills:</strong> {resumeData.soft_skills}
               </p>
-              <p style={{ fontSize: "14.5px", margin: "0 0 6px 0" }}>
+              <p className="text-[14.5px] m-0 mb-6">
                 <strong>Certifications:</strong> {resumeData.certs}
               </p>
 
-              <h3
-                style={{
-                  textTransform: "uppercase",
-                  fontSize: "13px",
-                  letterSpacing: "1px",
-                  borderBottom: "1px solid #cbd5e1",
-                  paddingBottom: "4px",
-                  marginBottom: "12px",
-                  color: "#0f172a",
-                  marginTop: "24px",
-                }}
-              >
-                Experience
-              </h3>
-              <div style={{ marginBottom: "24px" }}>
-                <p
-                  style={{
-                    fontSize: "14.5px",
-                    margin: "0 0 8px 0",
-                    fontWeight: "bold",
-                    color: "#0f172a",
-                  }}
-                >
-                  {resumeData.work_company_1} | {resumeData.work_title_1}
-                </p>
-                <ul
-                  style={{ margin: 0, paddingLeft: "24px", fontSize: "14.5px" }}
-                >
-                  <li>{resumeData.work_exp_1}</li>
-                </ul>
-              </div>
-
-              <h3
-                style={{
-                  textTransform: "uppercase",
-                  fontSize: "13px",
-                  letterSpacing: "1px",
-                  borderBottom: "1px solid #cbd5e1",
-                  paddingBottom: "4px",
-                  marginBottom: "12px",
-                  color: "#0f172a",
-                }}
-              >
-                Selected Projects
-              </h3>
-              <div style={{ marginBottom: "16px" }}>
-                <p
-                  style={{
-                    fontSize: "14.5px",
-                    margin: "0 0 4px 0",
-                    fontWeight: "bold",
-                    color: "#0f172a",
-                  }}
-                >
-                  {resumeData.project_title_1}
-                </p>
-                <ul
-                  style={{ margin: 0, paddingLeft: "24px", fontSize: "14.5px" }}
-                >
-                  <li>{resumeData.project_description_1}</li>
-                </ul>
-              </div>
-              <div style={{ marginBottom: "16px" }}>
-                <p
-                  style={{
-                    fontSize: "14.5px",
-                    margin: "0 0 4px 0",
-                    fontWeight: "bold",
-                    color: "#0f172a",
-                  }}
-                >
-                  {resumeData.project_title_2}
-                </p>
-                <ul
-                  style={{ margin: 0, paddingLeft: "24px", fontSize: "14.5px" }}
-                >
-                  <li>{resumeData.project_description_2}</li>
-                </ul>
-              </div>
-              <div style={{ marginBottom: "16px" }}>
-                <p
-                  style={{
-                    fontSize: "14.5px",
-                    margin: "0 0 4px 0",
-                    fontWeight: "bold",
-                    color: "#0f172a",
-                  }}
-                >
-                  {resumeData.project_title_3}
-                </p>
-                <ul
-                  style={{ margin: 0, paddingLeft: "24px", fontSize: "14.5px" }}
-                >
-                  <li>{resumeData.project_description_3}</li>
-                </ul>
-              </div>
               {resumeData.achievements && (
                 <>
-                  <h3
-                    style={{
-                      textTransform: "uppercase",
-                      fontSize: "13px",
-                      letterSpacing: "1px",
-                      borderBottom: "1px solid #cbd5e1",
-                      paddingBottom: "4px",
-                      marginBottom: "12px",
-                      color: "#0f172a",
-                      marginTop: "24px",
-                    }}
-                  >
-                    Achievements
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "14.5px",
-                      marginBottom: "24px",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
+                  <h3 className={classes.previewHeader}>Achievements</h3>
+                  <p className="text-[14.5px] mb-6 whitespace-pre-line">
                     {resumeData.achievements}
                   </p>
                 </>
               )}
+
+              <h3 className={classes.previewHeader}>Experience</h3>
+              <div className="mb-6">
+                <p className="text-[14.5px] m-0 mb-2 font-bold text-slate-900">
+                  {resumeData.work_company_1} | {resumeData.work_title_1}
+                </p>
+                <ul className="m-0 pl-6 text-[14.5px] list-disc">
+                  <li>{resumeData.work_exp_1}</li>
+                </ul>
+              </div>
+
+              <h3 className={classes.previewHeader}>Selected Projects</h3>
+              <div className="mb-4">
+                <p className="text-[14.5px] m-0 mb-1 font-bold text-slate-900">
+                  {resumeData.project_title_1}
+                </p>
+                <ul className="m-0 pl-6 text-[14.5px] list-disc">
+                  <li>{resumeData.project_description_1}</li>
+                </ul>
+              </div>
+              <div className="mb-4">
+                <p className="text-[14.5px] m-0 mb-1 font-bold text-slate-900">
+                  {resumeData.project_title_2}
+                </p>
+                <ul className="m-0 pl-6 text-[14.5px] list-disc">
+                  <li>{resumeData.project_description_2}</li>
+                </ul>
+              </div>
+              <div className="mb-4">
+                <p className="text-[14.5px] m-0 mb-1 font-bold text-slate-900">
+                  {resumeData.project_title_3}
+                </p>
+                <ul className="m-0 pl-6 text-[14.5px] list-disc">
+                  <li>{resumeData.project_description_3}</li>
+                </ul>
+              </div>
             </div>
           </div>
         ) : (
-          <div
-            style={{
-              height: "100%",
-              minHeight: "650px",
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "16px",
-              boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)",
-              padding: "40px",
-              flexDirection: "column",
-            }}
-          >
-            <div
-              style={{
-                background: "#f1f5f9",
-                padding: "24px",
-                borderRadius: "50%",
-                marginBottom: "24px",
-                color: "#3b82f6",
-              }}
-            >
+          /* MODERN EMPTY STATE */
+          <div className="h-full min-h-162.5 w-full flex items-center justify-center bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-10 flex-col">
+            <div className="bg-slate-100 p-6 rounded-full mb-6 text-blue-500">
               <svg
                 width="48"
                 height="48"
@@ -732,55 +448,23 @@ function App() {
               </svg>
             </div>
 
-            <h3
-              style={{
-                color: "#0f172a",
-                fontSize: "22px",
-                margin: "0 0 12px 0",
-                fontWeight: "700",
-              }}
-            >
+            <h3 className="text-slate-900 text-[22px] m-0 mb-3 font-bold">
               Ready to tailor your resume?
             </h3>
-            <p
-              style={{
-                color: "#64748b",
-                textAlign: "center",
-                maxWidth: "420px",
-                lineHeight: "1.6",
-                fontSize: "15px",
-                margin: "0 0 32px 0",
-              }}
-            >
+            <p className="text-slate-500 text-center max-w-105 leading-relaxed text-[15px] m-0 mb-8">
               Enter a job title and paste the description on the left. Our AI
               will analyze the requirements and dynamically align your
               experience and projects to match perfectly.
             </p>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              <span
-                className="feature-pill"
-                style={{ background: "#eff6ff", color: "#1d4ed8" }}
-              >
+            <div className="flex gap-3 flex-wrap justify-center">
+              <span className="px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-blue-50 text-blue-700">
                 🎯 ATS Optimized Output
               </span>
-              <span
-                className="feature-pill"
-                style={{ background: "#f0fdf4", color: "#15803d" }}
-              >
+              <span className="px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-green-50 text-green-700">
                 ✨ AI Keyword Matching
               </span>
-              <span
-                className="feature-pill"
-                style={{ background: "#fdf4ff", color: "#a21caf" }}
-              >
+              <span className="px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-fuchsia-50 text-fuchsia-700">
                 📝 Editable Word Doc
               </span>
             </div>
