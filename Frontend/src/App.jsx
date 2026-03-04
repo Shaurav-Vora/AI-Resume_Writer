@@ -192,14 +192,16 @@ function App() {
               </button>
             </div>
 
-            {/* CARD 1: Profile Summary */}
+            {/* CARD 1: Objective */}
             <div className={classes.card}>
-              <h3 className={classes.cardTitle}>👤 Profile Summary</h3>
+              <h3 className={classes.cardTitle}>🎯 Objective</h3>
               <div className="mb-4">
                 <AutoResizeTextarea
                   className={classes.input}
-                  value={resumeData.resume_summary}
-                  onChange={(e) => handleEdit("resume_summary", e.target.value)}
+                  value={resumeData.resume_objective}
+                  onChange={(e) =>
+                    handleEdit("resume_objective", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -366,8 +368,10 @@ function App() {
 
             {/* Resume Content Preview */}
             <div className="font-serif text-slate-700 leading-relaxed">
-              <h3 className={classes.previewHeader}>Summary</h3>
-              <p className="text-[14.5px] mb-6">{resumeData.resume_summary}</p>
+              <h3 className={classes.previewHeader}>Objective</h3>
+              <p className="text-[14.5px] mb-6">
+                {resumeData.resume_objective}
+              </p>
 
               <h3 className={classes.previewHeader}>Skills & Certifications</h3>
               <p className="text-[14.5px] m-0 mb-1.5">
@@ -379,15 +383,6 @@ function App() {
               <p className="text-[14.5px] m-0 mb-6">
                 <strong>Certifications:</strong> {resumeData.certs}
               </p>
-
-              {resumeData.achievements && (
-                <>
-                  <h3 className={classes.previewHeader}>Achievements</h3>
-                  <p className="text-[14.5px] mb-6 whitespace-pre-line">
-                    {resumeData.achievements}
-                  </p>
-                </>
-              )}
 
               <h3 className={classes.previewHeader}>Experience</h3>
               <div className="mb-6">
@@ -416,7 +411,7 @@ function App() {
                   <li>{resumeData.project_description_2}</li>
                 </ul>
               </div>
-              <div className="mb-4">
+              <div className="mb-6">
                 <p className="text-[14.5px] m-0 mb-1 font-bold text-slate-900">
                   {resumeData.project_title_3}
                 </p>
@@ -424,6 +419,16 @@ function App() {
                   <li>{resumeData.project_description_3}</li>
                 </ul>
               </div>
+
+              {/* Achievements Moved to the Bottom */}
+              {resumeData.achievements && (
+                <>
+                  <h3 className={classes.previewHeader}>Achievements</h3>
+                  <p className="text-[14.5px] mb-2 whitespace-pre-line">
+                    {resumeData.achievements}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         ) : (
