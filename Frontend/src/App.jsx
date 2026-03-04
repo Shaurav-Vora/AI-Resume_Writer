@@ -24,7 +24,7 @@ const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
 };
 
 function App() {
-  // NEW: Check local storage on initial load. If nothing is there, default to ""
+  // 1. AUTO-SAVE: Load data from memory on startup
   const [jobTitle, setJobTitle] = useState(() => {
     return localStorage.getItem("draftJobTitle") || "";
   });
@@ -36,6 +36,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  // 1. AUTO-SAVE: Load the generated resume if it exists, bypassing the start screen!
   const [resumeData, setResumeData] = useState(() => {
     const savedData = localStorage.getItem("draftResumeData");
     if (savedData) {
@@ -48,16 +49,14 @@ function App() {
     return null;
   });
 
-  // NEW: Save everything, including the generated resume object
+  // 1. AUTO-SAVE: Save everything to memory whenever you type
   useEffect(() => {
     localStorage.setItem("draftJobTitle", jobTitle);
     localStorage.setItem("draftJobDesc", jobDescription);
 
-    // Since resumeData is an object, we must convert it to a string to save it
     if (resumeData) {
       localStorage.setItem("draftResumeData", JSON.stringify(resumeData));
     } else {
-      // If user clicks "Start Over" and sets resumeData to null, clear it from memory
       localStorage.removeItem("draftResumeData");
     }
   }, [jobTitle, jobDescription, resumeData]);
@@ -117,6 +116,11 @@ function App() {
     setResumeData({ ...resumeData, [field]: value });
   };
 
+  // 2. PDF EXPORT: The print function
+  const handlePrint = () => {
+    window.print();
+  };
+
   const classes = {
     input:
       "w-full px-4 py-3.5 text-[15px] rounded-lg border border-slate-300 bg-slate-50 transition-all duration-200 text-slate-800 leading-relaxed focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400",
@@ -130,9 +134,11 @@ function App() {
   };
 
   return (
-    <div className="max-w-400 mx-auto p-8 font-sans flex gap-10 items-start justify-center min-h-screen">
+    // Added print:p-0 print:m-0 print:block to strip the app layout formatting during PDF creation
+    <div className="max-w-400 mx-auto p-8 font-sans flex gap-10 items-start justify-center min-h-screen print:p-0 print:m-0 print:block print:bg-white">
       {/* LEFT COLUMN: Input Form or Editor */}
-      <div className="custom-scrollbar flex-1 min-w-125 sticky top-8 max-h-[90vh] overflow-y-auto pr-3">
+      {/* Added print:hidden to make the editor completely vanish on the PDF */}
+      <div className="custom-scrollbar flex-1 min-w-125 sticky top-8 max-h-[90vh] overflow-y-auto pr-3 print:hidden">
         {!resumeData ? (
           <div className={`${classes.card} border-t-4 border-t-blue-500`}>
             <h1 className="mt-0 text-[32px] tracking-tight mb-2">
@@ -375,23 +381,37 @@ function App() {
       </div>
 
       {/* RIGHT COLUMN: Output Dashboard & Preview */}
-      <div className="flex-1 min-w-150 flex flex-col h-full">
+      {/* Added print:block print:w-full print:m-0 print:p-0 to make the preview take up the whole PDF */}
+      <div className="flex-1 min-w-150 flex flex-col h-full print:block print:w-full print:m-0 print:p-0">
         {resumeData ? (
-          <div className="bg-white rounded-2xl p-10 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200">
-            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-100 pb-5">
+          // Added print:shadow-none print:border-none print:p-0 print:m-0 to make it look like a pure document
+          <div className="bg-white rounded-2xl p-10 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none">
+            {/* Added print:hidden so the buttons and "Live Preview" text don't show up on the PDF */}
+            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-100 pb-5 print:hidden">
               <h2 className="m-0 text-slate-900 text-2xl font-bold">
                 📄 Live Preview{" "}
                 <span className="font-normal text-slate-500 text-sm">
                   *Layout may slightly differ in Word
                 </span>
               </h2>
-              <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="px-6 py-3 text-[15px] font-semibold rounded-lg transition-all duration-200 bg-green-600 text-white hover:bg-green-700 shadow-[0_4px_6px_rgba(22,163,74,0.2)] disabled:bg-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
-              >
-                {isExporting ? "Building Document..." : "📥 Download .docx"}
-              </button>
+
+              <div className="flex gap-3">
+                {/* NEW: Print to PDF Button */}
+                <button
+                  onClick={handlePrint}
+                  className="px-6 py-3 text-[15px] font-semibold rounded-lg transition-all duration-200 bg-blue-600 text-white hover:bg-blue-700 shadow-[0_4px_6px_rgba(37,99,235,0.2)]"
+                >
+                  🖨️ Save as PDF
+                </button>
+
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="px-6 py-3 text-[15px] font-semibold rounded-lg transition-all duration-200 bg-green-600 text-white hover:bg-green-700 shadow-[0_4px_6px_rgba(22,163,74,0.2)] disabled:bg-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                  {isExporting ? "Building Document..." : "📥 Download .docx"}
+                </button>
+              </div>
             </div>
 
             {/* Resume Content Preview */}
@@ -460,7 +480,7 @@ function App() {
           </div>
         ) : (
           /* MODERN EMPTY STATE */
-          <div className="h-full min-h-162.5 w-full flex items-center justify-center bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-10 flex-col">
+          <div className="h-full min-h-162.5 w-full flex items-center justify-center bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-10 flex-col print:hidden">
             <div className="bg-slate-100 p-6 rounded-full mb-6 text-blue-500">
               <svg
                 width="48"
