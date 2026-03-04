@@ -4,8 +4,10 @@ import google.generativeai as genai
 import os
 import json
 import io
+import typing # NEW: Import typing for the schema
 from dotenv import load_dotenv
 from docxtpl import DocxTemplate
+from pydantic import BaseModel, Field
 
 load_dotenv()
 
@@ -14,9 +16,29 @@ CORS(app)
 
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
+# NEW: Define the exact blueprint Gemini MUST follow
+class ResumeOutput(BaseModel):
+    tech_skills: str = Field(description="Comma-separated list of the top 7 technical keywords from the Job Description relevant to the user's skills.")
+    soft_skills: str = Field(description="Comma-separated list of the top 7 soft skills from the Job Description relevant to the user.")
+    certs: str = Field(description="Comma-separated list of up to 4 relevant certifications from the Master Resume.")
+    resume_objective: str = Field(description="A concise, 1-2 sentence Resume Objective tailored to the Job Description, including the UK Design patent if relevant.")
+    project_title_1: str = Field(description="Name of the best matching project.")
+    project_description_1: str = Field(description="A 40-50 word description of the project using unique action verbs and quantified impact.")
+    project_title_2: str = Field(description="Name of the 2nd best matching project.")
+    project_description_2: str = Field(description="A 40-50 word description of the project using unique action verbs and quantified impact.")
+    project_title_3: str = Field(description="Name of the 3rd best matching project.")
+    project_description_3: str = Field(description="A 40-50 word description of the project using unique action verbs and quantified impact.")
+    work_title_1: str = Field(description="Title of the work experience.")
+    work_company_1: str = Field(description="Company name of the work experience.")
+    work_exp_1: str = Field(description="Rewritten description of work experience enforcing unique action verbs and quantified impact.")
+    achievements: str = Field(description="A SINGLE continuous string formatted with bullet points (\n• ) containing 2-3 key achievements. DO NOT output a JSON array.")
+
 model = genai.GenerativeModel(
     'gemini-2.5-flash',
-    generation_config={"response_mime_type": "application/json"}
+    generation_config={
+        "response_mime_type": "application/json",
+        "response_schema": ResumeOutput
+    }
 )
 
 MASTER_RESUME = """
@@ -50,47 +72,21 @@ Tasks - Engineered a full-stack AI solution using Python and RAG architecture to
 6. Chat application: Architected a real-time chat app using Spring Boot (backend) and Java Swing (frontend). Implemented WebSocket communication for <50ms latency messaging and integrated JWT for secure access for 50+ concurrent mock users.
 """
 
+# UPDATED: We removed the giant JSON block at the bottom since the schema handles it!
 SYSTEM_PROMPT = """
 You are an expert Technical Recruiter and Resume Writer. 
 I will provide my "Master Resume" (which includes a pool of projects) and a "Job Description".
 
-Task 1: Read the Job Description and select the THREE projects from my 'Projects Pool' that most closely match the required skills.
-Task 2: Rewrite the description for the THREE chosen projects to perfectly align with the JD keywords.
-Task 3: Write a concise, 1-2 sentence Resume Objective tailored specifically to the Job Description. It must include the target job title, top keywords, and relevant education/certifications.
-Task 4: Write a comma-separated list of the top 7 technical keywords from the Job Description that are relevant to my skills and experience.
-Task 5: Write a comma-separated list of the top 7 soft skills from the Job Description that are relevant to my skills.
-Task 6: Select up to 4 relevant certifications from my Master Resume. Do not invent any.
-Task 7: Rewrite my work experience to align with the JD keywords.
-Task 8: Highlight 2-3 key achievements from my Master Resume that are most relevant to the Job Description. Ensure the UK Design Patent is included if relevant.
+Task 1: Read the Job Description and select the THREE projects from my 'Projects Pool' that most closely match the required skills. 
+Task 2: Rewrite the description for the THREE chosen projects to perfectly align with the JD keywords. Ensure the action words do not sound robotic and that the descriptions are concise (40-50 words) while quantifying the impact of my work using realistic metrics which you can either find in the project details or estimate.
+Task 3: Rewrite my work experience to align with the JD keywords and again, ensure the action words do not sound robotic or repetitive.
 
 CRITICAL RULES FOR BEATING ATS (STRICT COMPLIANCE REQUIRED):
-- NO REPETITION: You MUST use a unique, strong action verb to start every single bullet point across the entire resume. Do not repeat verbs like "Developed", "Engineered", or "Created". Use additional diverse vocabulary (e.g., Architected, Synthesized, Optimized, Formulated, etc.).
+- Less REPETITION: You MUST use a unique, strong action verb to start every single bullet point across the entire resume. Do not repeat verbs like "Developed", "Engineered", or "Created". Use additional diverse vocabulary (e.g., Architected, Synthesized, Optimized, Formulated, etc.).
 - KEYWORD MIRRORING: Seamlessly embed exact phrases and keywords from the Job Description into the project and work experience descriptions without sounding robotic.
 - REALISTIC METRIC ESTIMATION: ATS systems require numbers. If my Master Resume describes an accomplishment without specific numbers, you MUST estimate a highly realistic, conservative metric based on standard industry benchmarks for the technologies used (e.g., "accelerated processing by ~20%", "managed dataset of 10,000+ records", "optimized latency by 15%"). Do NOT invent entirely new features or skills, but DO quantify the existing achievements realistically.
 - Structure every project and experience description using the format: [Unique Action Verb] + [What I did] + [Technology Used] + [Quantifiable Result/Impact].
-- Length: Keep project descriptions between 40 and 50 words.
-- FOR THE OBJECTIVE: You MUST include the fact that I hold a "UK design patent for an autonomous robot for sustainable desert restoration".
-- FOR THE OBJECTIVE: Keep it strictly to 1-2 sentences (max 3 lines). It must highlight your most relevant qualifications, education, and exact keywords from the JD to prove your passion and fit for this specific role.
-- Do no apply * (asterisk) for bolding or any other formatting in the JSON output. The output must be strictly plain text within the JSON format.
-
-Output a strictly valid JSON object with these exact keys. For the 'achievements' key, output a SINGLE continuous string formatted with bullet points (\n• ), DO NOT output a JSON array.
-
-{
-    "tech_skills": "[Insert comma separated list of top 7 technical keywords here]",
-    "soft_skills": "[Insert comma separated list of top 7 soft skills here]",
-    "certs": "[Insert comma separated list of top 4 certifications here]",
-    "resume_objective": "[Insert tailored 1-2 sentence objective here]",
-    "project_title_1": "[Insert Name of Best Matching Project]",
-    "project_description_1": "[Insert a 2-3 sentence description of the project]",
-    "project_title_2": "[Insert Name of 2nd Best Matching Project]",
-    "project_description_2": "[Insert a 2-3 sentence description of the project]",
-    "project_title_3": "[Insert Name of 3rd Best Matching Project]",
-    "project_description_3": "[Insert a 2-3 sentence description of the project]",
-    "work_title_1": "[Insert the title of the work experience]",
-    "work_company_1": "[Insert the company name]",
-    "work_exp_1": "[Insert the rewritten description enforcing unique action verbs and quantified impact]",
-    "achievements": "• [Achievement 1]\n• [Achievement 2]\n• [Achievement 3]"
-}
+- Do not apply * (asterisk) for bolding or any other formatting in the output.
 """
 
 @app.route('/api/generate', methods=['POST'])
@@ -104,17 +100,17 @@ def generate_resume():
     try:
         response = model.generate_content(combined_prompt)
         clean_text = response.text.strip()
+        
+        # Sometimes even with response_mime_type, the model adds markdown ticks
         if clean_text.startswith("```json"):
             clean_text = clean_text[7:-3].strip()
+        elif clean_text.startswith("```"):
+            clean_text = clean_text[3:-3].strip()
             
         ai_content = json.loads(clean_text)
 
-        # Safety net: just in case it still returns a list for achievements
-        if isinstance(ai_content.get('achievements'), list):
-            ai_content['achievements'] = '\n• '.join(ai_content['achievements'])
-            
-            if not ai_content['achievements'].startswith('•'):
-                ai_content['achievements'] = '• ' + ai_content['achievements']
+        # CLEANUP: We completely removed the 'if isinstance(list)' safety net here!
+        # The schema guarantees it will be a string.
 
         return jsonify({"success": True, "data": ai_content})
 
