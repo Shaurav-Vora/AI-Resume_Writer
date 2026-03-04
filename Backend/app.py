@@ -43,7 +43,7 @@ model = genai.GenerativeModel(
 
 MASTER_RESUME = """
 [Technical Skills]
-Programming Languages: Python, Java, JavaScript, SQL, C, C++, Pine Script
+Programming Languages: Python, Java, JavaScript, SQL, C, C++
 Frameworks & Libraries: Spring Boot, TensorFlow, OpenCV, Flask, Android Studio, React, BeautifulSoup, Selenium
 Tools & Technologies: Apache Kafka, REST APIs, JWT, Firebase, Google Gemini API, Git
 
@@ -60,7 +60,7 @@ Generative AI with AWS, Microsoft Excel, Fundamentals of Java
 
 [Experience]
 Company - Veracitiz Solutions Pvt. Ltd
-Role - Software Engineering Intern (July 2025 - August 2025)
+Role - AI Intern (July 2025 - August 2025)
 Tasks - Engineered a full-stack AI solution using Python and RAG architecture to process 100+ uploaded PDFs daily, generating context-aware assessment questions. Implemented vector embeddings and transformers to optimize information retrieval by 40%, connecting to the Gemini API to reduce manual query time by 2.5 hours per day.
 
 [Projects Pool]

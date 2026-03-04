@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 
-// NEW: A reusable component that automatically adjusts its height based on content
+// A reusable component that automatically adjusts its height based on content
 const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
   const textareaRef = useRef(null);
 
   useEffect(() => {
     if (textareaRef.current) {
-      // Temporarily shrink to 'auto' so it can reduce in size if text is deleted
       textareaRef.current.style.height = "auto";
-      // Expand to match the exact height of the inner text
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [value]);
@@ -19,7 +17,6 @@ const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
       value={value || ""}
       onChange={onChange}
       placeholder={placeholder}
-      // 'resize-none' hides the mouse drag handle, 'overflow-hidden' hides the scrollbar
       className={`${className} resize-none overflow-hidden`}
       rows={1}
     />
@@ -27,11 +24,43 @@ const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
 };
 
 function App() {
-  const [jobTitle, setJobTitle] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
+  // NEW: Check local storage on initial load. If nothing is there, default to ""
+  const [jobTitle, setJobTitle] = useState(() => {
+    return localStorage.getItem("draftJobTitle") || "";
+  });
+
+  const [jobDescription, setJobDescription] = useState(() => {
+    return localStorage.getItem("draftJobDesc") || "";
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [resumeData, setResumeData] = useState(null);
+
+  const [resumeData, setResumeData] = useState(() => {
+    const savedData = localStorage.getItem("draftResumeData");
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // NEW: Save everything, including the generated resume object
+  useEffect(() => {
+    localStorage.setItem("draftJobTitle", jobTitle);
+    localStorage.setItem("draftJobDesc", jobDescription);
+
+    // Since resumeData is an object, we must convert it to a string to save it
+    if (resumeData) {
+      localStorage.setItem("draftResumeData", JSON.stringify(resumeData));
+    } else {
+      // If user clicks "Start Over" and sets resumeData to null, clear it from memory
+      localStorage.removeItem("draftResumeData");
+    }
+  }, [jobTitle, jobDescription, resumeData]);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -237,7 +266,6 @@ function App() {
                   onChange={(e) => handleEdit("certs", e.target.value)}
                 />
               </div>
-              {/* RESTORED: Achievements Block */}
               <div>
                 <label className={classes.label}>Key Achievements</label>
                 <AutoResizeTextarea
@@ -420,7 +448,6 @@ function App() {
                 </ul>
               </div>
 
-              {/* Achievements Moved to the Bottom */}
               {resumeData.achievements && (
                 <>
                   <h3 className={classes.previewHeader}>Achievements</h3>
